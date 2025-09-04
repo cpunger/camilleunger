@@ -1,0 +1,124 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Camille Unger | Leftovers</title>
+  <style>
+    
+    body {
+      background-color: #111;
+      color: #e0e0e0;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      background-image: url('images/background.jpg'); 
+      background-size: 292px;
+      background-repeat: repeat;
+    }
+
+    title {
+      display: flex; 
+      padding: 1rem; 
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: flex-start;
+      color: #bbbbbb;
+      font-weight: bold; 
+      font-size: .75rem;
+    }
+      
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      padding: .5rem;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+    }
+
+    nav a {
+      color: #5d607e;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 4rem auto;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2rem;
+      border: 1px dashed #5d607e;
+    }
+
+    .exit {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #bbbbbb;
+    }
+
+    .exit:hover {
+      color: #5d607e;
+    }
+
+    .art {
+      padding-top: 0rem; 
+    }
+
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    
+    .art-img {
+      max-width: 200px;
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      box-sizing: border-box;
+    }
+    
+    a {
+      color: #bbbbbb; 
+      text-decoration: none;
+    }
+    
+    a:hover {
+      color: #bbbbbb; 
+    }
+    
+    img {
+      filter: grayscale(100%) saturate(135%);
+      transition: filter 0.5s ease;
+    }
+    
+    img:hover {
+      filter: grayscale(20%) saturate(100%);
+    }
+    
+  </style>
+  
+</head>
+<body>
+  
+  <title>Camille Unger | Leftovers</title>
+  
+  <nav>
+    <a href="lines.html">art</a>
+    <a href="pics.html">pics</a>
+    <a href="about.html">bio</a>
+  </nav>
+
+  <div class="container">
+    <div id="drawings" class="art">
+      <div class="gallery">
+        <img class="art-img" src="images/art2.jpeg" alt="more plastic gloves">
+        <img class="art-img" src="images/art1.jpeg" alt="plastic gloves"> 
+        <img class="art-img" src="images/art3.jpeg" alt="and more">
+ 
+    </div>
