@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects — Camille Unger</title>
+  <meta name="description" content="Projects by Camille Unger, written like short blog posts with photos and build notes." />
+  <style>
+    :root {
+      --bg: #fff;
+      --text: #111;
+      --muted: #666;
+      --card: #fafafa;
+      --border: #e5e5e5;
+      --accent: #3a6;
+    }
+    html, body { background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 760px; margin: 2.5rem auto 4rem; padding: 0 1rem; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+    header h1 { font-size: 1.6rem; margin: 0; letter-spacing: 0.2px; }
+    nav a { margin-right: .9rem; font-size: .95rem; color: var(--muted); }
+    nav a[aria-current="page"] { color: var(--text); font-weight: 600; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: .5rem .6rem; margin: 1rem 0 2rem; }
+    .chip { border: 1px solid var(--border); background: var(--card); padding: .35rem .6rem; border-radius: 999px; font-size: .85rem; cursor: pointer; }
+    .chip[data-active="true"] { background: #eaf8f0; border-color: #cfe9da; }
+
+    article { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1rem 1.1rem; margin: 1.1rem 0 1.25rem; }
+    article header { display: block; margin: 0 0 .25rem; }
+    article h2 { font-size: 1.25rem; margin: 0 0 .25rem; }
+    .meta { color: var(--muted); font-size: .9rem; margin-bottom: .4rem; }
+    .tags { display: inline-flex; gap: .35rem; margin-left: .35rem; }
+    .tag { background: #eef6ff; border: 1px solid #dfefff; color: #1b4a7a; padding: .15rem .5rem; border-radius: 999px; font-size: .8rem; }
+
+    summary { list-style: none; cursor: pointer; }
+    summary::-webkit-details-marker { display: none; }
+    .summary-line { display: flex; align-items: center; gap: .5rem; }
+    .summary-line .read { font-size: .9rem; color: var(--accent); }
+
+    .teaser { margin: .35rem 0 .5rem; color: var(--text); }
+    .content { padding-top: .5rem; border-top: 1px dashed var(--border); }
+    .content p { margin: .6rem 0; }
+    .content img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
+    pre { overflow: auto; background: #0d1117; color: #c9d1d9; padding: .75rem; border-radius: 12px; border: 1px solid #30363d; font-size: .9rem; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+
+    footer { margin-top: 2.2rem; color: var(--muted); font-size: .9rem; }
+    .top { display: inline-block; margin-top: .8rem; }
+
+    /* small screens */
+    @media (max-width: 560px) {
+      header { flex-direction: column; align-items: flex-start; gap: .35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Projects</h1>
+      <nav>
+        <a href="/camilleunger/lines.html">art</a>
+        <a href="/camilleunger/pics.html">pics</a>
+        <a href="/camilleunger/projects.html" aria-current="page">projects</a>
+        <a href="/camilleunger/about.html">bio</a>
+        <a href="/camilleunger/index.html">home</a>
+      </nav>
+    </header>
+
+    <!-- Filter controls (optional) -->
+    <div class="controls" id="filters" aria-label="Filter by tag">
+      <button class="chip" data-filter="all" data-active="true">All</button>
+      <button class="chip" data-filter="guitar">Guitar</button>
+      <button class="chip" data-filter="electronics">Electronics</button>
+      <button class="chip" data-filter="art">Art</button>
+      <button class="chip" data-filter="notes">Notes</button>
+    </div>
+
+    <!-- Project 1 -->
+    <article data-tags="guitar electronics">
+      <header>
+        <h2 id="green-noise">Green Noise: DIY Overdrive</h2>
+        <div class="meta">Oct 2025 <span class="tags"><span class="tag">guitar</span><span class="tag">electronics</span></span></div>
+      </header>
+      <details>
+        <summary class="summary-line">
+          <span class="teaser">A TS‑style overdrive with a switchable germanium diode pair and a bias control for starved grit. Sound clips + schematic inside.</span>
+          <span class="read">Read</span>
+        </summary>
+        <div class="content">
+          <img src="/camilleunger/assets/placeholder-pedal.jpg" alt="Green Noise overdrive pedal on a desk" />
+          <p>This is my favorite kind of problem: minimal parts, maximal character. I started from a classic topology and nudged a few values until it sang on single coils. If you want less compression, flip to the Si/Ge combo and roll the bias back a touch.</p>
+          <p><strong>Parts list:</strong> TL072, 1N4148 ×2, Ge diodes ×2, B100k volume, A500k drive, B50k tone, 3PDT true-bypass, 9V DC.</p>
+          <pre><code>// snippet: input network
+R1 1M // pulldown
+C1 47nF // high-pass edge
+R2 470k // gain set
+C2 220nF // low shelf
+</code></pre>
+          <p>Full schematic PDF and stripboard layout coming later; for now, here are the values that landed best with my guitar and amp.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- Project 2 -->
+    <article data-tags="art notes">
+      <header>
+        <h2 id="lines-seed">Lines → Seed</h2>
+        <div class="meta">Sep 2025 <span class="tags"><span class="tag">art</span><span class="tag">notes</span></span></div>
+      </header>
+      <details>
+        <summary class="summary-line">
+          <span class="teaser">Turning quick line studies into a simple risograph‑ready zine. Process, paper tests, and a few spreads.</span>
+          <span class="read">Read</span>
+        </summary>
+        <div class="content">
+          <img src="/camilleunger/assets/placeholder-lines.jpg" alt="Black ink line drawings arranged on a table" />
+          <p>I pulled a handful of drawings from <a href="/camilleunger/lines.html">the lines page</a> and worked them into a 12‑page sequence. The trick was keeping the looseness while cleaning the scans. Notes below on my low‑effort threshold + duplex alignment.</p>
+          <ul>
+            <li>Scan at 600dpi, grayscale → threshold to ~170.</li>
+            <li>Two‑color test: black + warm gray on 70# text stock.</li>
+            <li>Crop to a common gutter so spreads register cleanly.</li>
+          </ul>
+        </div>
+      </details>
+    </article>
+
+    <!-- Project 3 -->
+    <article data-tags="electronics notes">
+      <header>
+        <h2 id="bench-supply">Bench Supply, Tiny Footprint</h2>
+        <div class="meta">Aug 2025 <span class="tags"><span class="tag">electronics</span><span class="tag">notes</span></span></div>
+      </header>
+      <details>
+        <summary class="summary-line">
+          <span class="teaser">Taming a buck module into a quiet 0–12V lab supply with current limit. Panel meter, banana jacks, and a box that doesn’t offend me.</span>
+          <span class="read">Read</span>
+        </summary>
+        <div class="content">
+          <p>Off‑the‑shelf DC‑DC modules are noisy out of the box. A simple LC filter and decent layout get you far. I used a compact Hammond box with a printed label—it’s nicer to live with, which means I actually use it.</p>
+          <p><strong>Quick notes:</strong> add a 2.2µH inductor and 470µF low‑ESR cap on the output, route panel wiring away from the inductor, and float the meter ground if it’s unhappy.</p>
+        </div>
+      </details>
+    </article>
+
+    <footer>
+      <div>Tip: to add a new project, duplicate an <code>&lt;article&gt;</code> block, change the title, date, tags, and content. The filter buttons up top work off the <code>data-tags</code> attribute.</div>
+      <a class="top" href="#top">↑ Back to top</a>
+    </footer>
+  </div>
+
+  <script>
+    // Simple tag filtering
+    const chips = Array.from(document.querySelectorAll('.chip'));
+    const cards = Array.from(document.querySelectorAll('article'));
+    chips.forEach(chip => chip.addEventListener('click', () => {
+      chips.forEach(c => c.dataset.active = 'false');
+      chip.dataset.active = 'true';
+      const f = chip.dataset.filter;
+      cards.forEach(card => {
+        if (f === 'all') { card.style.display = ''; return; }
+        const has = (card.dataset.tags || '').split(/\s+/).includes(f);
+        card.style.display = has ? '' : 'none';
+      });
+    }));
+  </script>
+</body>
+</html>
