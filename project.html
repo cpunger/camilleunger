@@ -57,23 +57,27 @@
              border-radius: 16px; 
              padding: 1rem 1.1rem; 
              margin: 1.1rem 0 1.25rem; }
-    article header { display: block; margin: 0 0 .25rem; }
-    article h2 { font-size: 1.25rem; margin: 0 0 .25rem; }
+    article header { display: block;
+                    margin: 0 0 .25rem; }
+    article h2 { font-size: 1.25rem;
+                margin: 0 0 .25rem; }
     
-    summary { list-style: none; cursor: pointer; }
+    summary { list-style: none; 
+             cursor: pointer; }
     summary::-webkit-details-marker { display: none; }
-    .summary-line { display: flex; align-items: center; gap: .5rem; }
-    .summary-line .read { font-size: .9rem; color: var(--accent); }
+    .summary-line { display: flex; align-items: center;
+                   gap: .5rem; }
+    .summary-line .read { font-size: .9rem;
+                         color: var(--accent); }
 
-    .teaser { margin: .35rem 0 .5rem; color: var(--text); }
+    .teaser { margin: .35rem 0 .5rem;
+             color: var(--text); }
     .content { padding-top: .5rem; border-top: 1px dashed var(--border); }
     .content p { margin: .6rem 0; }
-    .content img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
-    pre { overflow: auto; background: #0d1117; color: #c9d1d9; padding: .75rem; border-radius: 12px; border: 1px solid #30363d; font-size: .9rem; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-
-    footer { margin-top: 2.2rem; color: var(--muted); font-size: .9rem; }
-    .top { display: inline-block; margin-top: .8rem; }
+    .content img { width: 100%; 
+                  height: auto;
+                  border-radius: 12px; 
+                  border: 1px solid var(--border); }
 
     /* small screens */
     @media (max-width: 560px) {
@@ -99,20 +103,19 @@
     <!-- Project 1 -->
     <article data-tags="guitar electronics">
       <header>
-        <h2 id="green-noise">Pedal I: DIY Fuzz Face</h2>
-        <div class="meta">Oct 2025 <span class="tags"><span class="tag">guitar</span><span class="tag">electronics</span></span></div>
+        <h2 id="fuzz-face">Pedal I: DIY Fuzz Face</h2>
+        <div class="meta">September 2025 </div>
       </header>
       <details>
         <summary class="summary-line">
-          <span class="teaser">A TS‑style overdrive with a switchable germanium diode pair and a bias control for starved grit. Sound clips + schematic inside.</span>
+          <span class="teaser"> DIY altered fuzz-face guitar pedal.</span>
           <span class="read">Read</span>
         </summary>
         <div class="content">
           <img src="/camilleunger/assets/placeholder-pedal.jpg" alt="Green Noise overdrive pedal on a desk" />
-          <p>This is my favorite kind of problem: minimal parts, maximal character. I started from a classic topology and nudged a few values until it sang on single coils. If you want less compression, flip to the Si/Ge combo and roll the bias back a touch.</p>
+          <p>This is my favorite kind of problem: minimal parts, maximal </p>
           <p><strong>Parts list:</strong> TL072, 1N4148 ×2, Ge diodes ×2, B100k volume, A500k drive, B50k tone, 3PDT true-bypass, 9V DC.</p>
-          <pre><code>// snippet: input network
-</code></pre>
+\</code></pre>
           <p>Full schematic PDF and stripboard layout coming later; for now, here are the values that landed best with my guitar and amp.</p>
         </div>
       </details>
