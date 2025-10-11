@@ -52,11 +52,12 @@
                margin: 1rem 0 2rem; }
 
 
-    article { background: var(--card); 
-             border: 1px solid var(--border);
-             border-radius: 16px; 
-             padding: 1rem 1.1rem; 
-             margin: 1.1rem 0 1.25rem; }
+    article {
+             max-width: 700px;
+             margin: 4rem auto;
+             background: rgba(0, 0, 0, 0.75);
+             padding: 2rem;
+             border: 1px dashed #6D6F8A;}
     article header { display: block;
                     margin: 0 0 .25rem; }
     article h2 { font-size: 1.25rem;
@@ -78,7 +79,14 @@
                   height: auto;
                   border-radius: 12px; 
                   border: 1px solid var(--border); }
-
+    
+    .container {
+      max-width: 900px;
+      margin: 4rem auto;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 2rem;
+      border: 1px dashed #6D6F8A;
+    }
     /* small screens */
     @media (max-width: 560px) {
       header { flex-direction: column; align-items: flex-start; gap: .35rem; }
