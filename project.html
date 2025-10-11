@@ -7,7 +7,6 @@
   <meta name="description" content="Projects" />
   <style> 
     html, body {
-      background-color: #111;
       color: #e0e0e0;
       font-family: monospace;
       margin: 0;
@@ -39,6 +38,7 @@
       display: flex;
       gap: 1.5rem;
       padding: .5rem;
+      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
     }
     nav a {
@@ -50,7 +50,6 @@
     .controls { display: flex;
                flex-wrap: wrap; gap: .5rem .6rem;
                margin: 1rem 0 2rem; }
-
 
     article {
              max-width: 700px;
@@ -69,10 +68,10 @@
     .summary-line { display: flex; align-items: center;
                    gap: .5rem; }
     .summary-line .read { font-size: .9rem;
-                         color: var(--accent); }
+                         color: #e0e0e0; }
 
     .teaser { margin: .35rem 0 .5rem;
-             color: var(--text); }
+             color: #e0e0e0; }
     .content { padding-top: .5rem; border-top: 1px dashed var(--border); }
     .content p { margin: .6rem 0; }
     .content img { width: 100%; 
@@ -80,13 +79,6 @@
                   border-radius: 12px; 
                   border: 1px solid var(--border); }
     
-    .container {
-      max-width: 900px;
-      margin: 4rem auto;
-      background: rgba(0, 0, 0, 0.75);
-      padding: 2rem;
-      border: 1px dashed #6D6F8A;
-    }
     /* small screens */
     @media (max-width: 560px) {
       header { flex-direction: column; align-items: flex-start; gap: .35rem; }
@@ -120,10 +112,9 @@
           <span class="read">Read</span>
         </summary>
         <div class="content">
-          <img src="/camilleunger/assets/placeholder-pedal.jpg" alt="Green Noise overdrive pedal on a desk" />
-          <p>This is my favorite kind of problem: minimal parts, maximal </p>
-          <p><strong>Parts list:</strong> TL072, 1N4148 ×2, Ge diodes ×2, B100k volume, A500k drive, B50k tone, 3PDT true-bypass, 9V DC.</p>
-\</code></pre>
+          <img src="/camilleunger/assets/placeholder-pedal.jpg" alt="pic" />
+          <p>This is my favorite kind of problem: minimal parts, max distort </p>
+          <p><strong>Parts list:</strong> 9V DC.</p>
           <p>Full schematic PDF and stripboard layout coming later; for now, here are the values that landed best with my guitar and amp.</p>
         </div>
       </details>
