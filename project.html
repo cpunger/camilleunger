@@ -5,16 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Projects — Camille Unger</title>
   <meta name="description" content="Projects" />
-  <style>
-    :root {
-      --bg: #fff;
-      --text: #111;
-      --muted: #666;
-      --card: #fafafa;
-      --border: #e5e5e5;
-      --accent: #3a6;
-    }
-    
+  <style> 
     html, body {
       background-color: #111;
       color: #e0e0e0;
@@ -37,16 +28,17 @@
     header { display: flex; 
             align-items: baseline;
             justify-content: space-between;
-            gap: 1rem; margin-bottom: 1.25rem; }
+            gap: 1rem;
+            margin-bottom: 1.25rem; }
+
     header h1 { font-size: 1.6rem;
-               margin: 0; letter-spacing:
-                 0.2px; }
+               margin: 0;
+               letter-spacing:0.2px; }
     
     nav {
       display: flex;
       gap: 1.5rem;
       padding: .5rem;
-      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
     }
     nav a {
@@ -58,9 +50,7 @@
     .controls { display: flex;
                flex-wrap: wrap; gap: .5rem .6rem;
                margin: 1rem 0 2rem; }
-    
-    .chip { border: 1px solid var(--border); background: var(--card); padding: .35rem .6rem; border-radius: 999px; font-size: .85rem; cursor: pointer; }
-    .chip[data-active="true"] { background: #4b4d5f; border-color: #4b4d5f; }
+
 
     article { background: var(--card); 
              border: 1px solid var(--border);
@@ -70,10 +60,6 @@
     article header { display: block; margin: 0 0 .25rem; }
     article h2 { font-size: 1.25rem; margin: 0 0 .25rem; }
     
-    .meta { color: var(--muted); font-size: .9rem; margin-bottom: .4rem; }
-    .tags { display: inline-flex; gap: .35rem; margin-left: .35rem; }
-    .tag { background: #4b4d5f; border: 1px solid #4b4d5f; color: #4b4d5f; padding: .15rem .5rem; border-radius: 999px; font-size: .8rem; }
-
     summary { list-style: none; cursor: pointer; }
     summary::-webkit-details-marker { display: none; }
     .summary-line { display: flex; align-items: center; gap: .5rem; }
@@ -95,6 +81,8 @@
     }
   </style>
 </head>
+
+  
 <body>
   <div class="wrap">
     <header>
@@ -124,10 +112,6 @@
           <p>This is my favorite kind of problem: minimal parts, maximal character. I started from a classic topology and nudged a few values until it sang on single coils. If you want less compression, flip to the Si/Ge combo and roll the bias back a touch.</p>
           <p><strong>Parts list:</strong> TL072, 1N4148 ×2, Ge diodes ×2, B100k volume, A500k drive, B50k tone, 3PDT true-bypass, 9V DC.</p>
           <pre><code>// snippet: input network
-R1 1M // pulldown
-C1 47nF // high-pass edge
-R2 470k // gain set
-C2 220nF // low shelf
 </code></pre>
           <p>Full schematic PDF and stripboard layout coming later; for now, here are the values that landed best with my guitar and amp.</p>
         </div>
