@@ -87,7 +87,8 @@
     .content img { width: 50%; 
                   height: auto;
                   border-radius: 12px; 
-                  border: 1px solid var(--border); }
+                  border: 1px solid var(--border);
+                 }
     /* small screens */
     @media (max-width: 560px) {
       header { flex-direction: column; align-items: flex-start; gap: .35rem; } }
@@ -118,16 +119,15 @@
         </summary>
         <div class="content">
           <p>
-          <img class="pic-img" src="project/fuzz_face.jpeg" alt="something">
-            
             My first circuit and my first DIY pedal, the "fuzz face" pedal. 
             I followed the schematic from <a href = "https://www.electrosmash.com/fuzz-face"> electrosmash's </a> analysis of the fuzz face pedal.
             On hand, I had cheapo silicon components from educational kits, so I substituted the AC128 transistors for silocon BC327's, which worked just fine for my purposes (just to make a pedal that worked...). 
             Also, I wanted the sound to be "nastier", so I upped the resistance in the circuit, replaced R1-R3 with 6.8eX resistors. Below are the componenets and schematic...  
 
             Schematic: 
-              <img class="pic-img" src="project/fuzzface_schema.jpg" alt="fuzz-face altered schematic">
-
+          </p>
+              <p><img class="pic-img" src="project/fuzzface_schema.jpg" alt="fuzz-face altered schematic" class = "center"></p>
+          <p>
             Components:  
               C1:    2.2 uF
               C2:    22 uF
@@ -140,6 +140,7 @@
               Rfuzz:    1KΩ pot
               Q1, Q2:    BC327 (PBP... pin order different from AC128, check datasheet, orient accordingly...)
           </p>
+          <p><img class="pic-img" src="project/fuzz_face.jpeg" alt="something" class = "center"></p>
           <p></p>
         </div>
       </details>
