@@ -71,14 +71,36 @@
       object-fit: contain;
       box-sizing: border-box;
     }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      padding: .5rem;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: left; }
+    nav a {
+      color: #6D6F8A;
+      text-decoration: none;
+      font-weight: bold; }
+    
+    .controls { display: flex;
+               flex-wrap: wrap; gap: .5rem .6rem;
+               margin: 1rem 0 2rem; }
     
   </style>
 
 </head>
 <body>
   
-<div class="container">
+  <nav>
+    <a href="lines.html">art</a>
+    <a href="pics.html">pics</a>
+    <a href="projects.html">projects</a>
+    <a href="about.html">bio</a>
+    <a href="/camilleunger/index.html">home</a>
+  </nav>  
   
+<div class="container">
   <div class="gallery">
     <img class="art-img" src="images/art9.png" alt="something else">
     <img class="art-img" src="images/art10.png" alt="something else">
