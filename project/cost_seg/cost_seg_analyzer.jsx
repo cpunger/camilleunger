@@ -255,20 +255,24 @@ export default function CostSegAnalyzer() {
     setLoading(l=>({...l,[id]:true}));
     try {
       const b64=await toBase64(file);
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch("/api/analyze",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:SYSTEM_PROMPT,
-          messages:[{role:"user",content:[
-            {type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}},
-            {type:"text",text:"Analyze this photo for cost segregation components. Return only the JSON array."}
-          ]}]})
+        body:JSON.stringify({image_data:b64,media_type:file.type||"image/jpeg",system_prompt:SYSTEM_PROMPT})
       });
-      const data=await res.json();
-      const text=data.content?.map(c=>c.text||"").join("")||"";
-      const findings=JSON.parse(text.replace(/```json|```/g,"").trim());
+      const raw=await res.text();
+      let data={};
+      try { data = raw ? JSON.parse(raw) : {}; } catch {}
+      if (!res.ok) {
+        throw new Error(data.error || raw || 'Analysis failed');
+      }
+      const findings = Array.isArray(data.findings) ? data.findings : [];
+      if (!findings.length) {
+        throw new Error('No findings returned from analysis.');
+      }
       setResults(r=>({...r,[id]:{findings}}));
-    } catch {
-      setResults(r=>({...r,[id]:{error:"Analysis failed. Please try again.",findings:[]}}));
+    } catch (err) {
+      console.error("Analysis error:", err);
+      setResults(r=>({...r,[id]:{error:`Analysis failed: ${err.message}`,findings:[]}}));
     } finally {
       setLoading(l=>({...l,[id]:false}));
     }
