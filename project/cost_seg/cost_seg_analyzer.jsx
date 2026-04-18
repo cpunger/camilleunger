@@ -1,5 +1,78 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 
+// Queue manager for rate-limit handling
+class AnalysisQueue {
+  constructor(maxConcurrent = 2, maxRetries = 4) {
+    this.maxConcurrent = maxConcurrent;
+    this.maxRetries = maxRetries;
+    this.queue = [];
+    this.inProgress = new Set();
+    this.retryCount = new Map();
+  }
+
+  async add(fn, fileId) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ fn, fileId, resolve, reject });
+      this.process();
+    });
+  }
+
+  async process() {
+    if (this.inProgress.size >= this.maxConcurrent || this.queue.length === 0) return;
+
+    const task = this.queue.shift();
+    this.inProgress.add(task.fileId);
+
+    try {
+      const result = await this.executeWithRetry(task.fn, task.fileId);
+      task.resolve(result);
+    } catch (err) {
+      task.reject(err);
+    } finally {
+      this.inProgress.delete(task.fileId);
+      this.process();
+    }
+  }
+
+  async executeWithRetry(fn, fileId) {
+    let lastError;
+
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastError = err;
+        const statusCode = err.statusCode || 0;
+        const message = String(err.message || '').toLowerCase();
+        const isRateLimit = statusCode === 429 || message.includes('rate limit');
+        const isRetryable = isRateLimit || statusCode >= 500;
+
+        if (!isRetryable || attempt === this.maxRetries) {
+          throw err;
+        }
+
+        const serverDelay = Number(err.retryAfterMs || 0);
+        const baseDelay = isRateLimit
+          ? 65000
+          : Math.min(1500 * Math.pow(2, attempt), 30000);
+        const delay = Math.max(serverDelay, baseDelay) + Math.floor(Math.random() * 1500);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+    throw lastError;
+  }
+
+  getStatus() {
+    return {
+      queued: this.queue.length,
+      inProgress: this.inProgress.size,
+      total: this.queue.length + this.inProgress.size
+    };
+  }
+}
+
+const analysisQueue = new AnalysisQueue(2, 4);
+
 const SYSTEM_PROMPT = `You are an expert cost segregation analyst with deep knowledge of IRS guidelines, MACRS depreciation classes, and construction/building component identification.
 
 When given a photo of a property or building component, analyze it and identify all visible items that may qualify for accelerated depreciation under cost segregation.
@@ -168,17 +241,65 @@ async function exportPDF(files, results) {
   doc.save("costseg-report.pdf");
 }
 
-function FileCard({ file, result, isLoading }) {
+function FileCard({ file, result, isLoading, isCardExpanded, onToggleCardExpansion }) {
   const url = URL.createObjectURL(file);
   const findings = result?.findings || [];
   const acc = findings.filter(f=>f.accelerated);
   const str = findings.filter(f=>!f.accelerated);
+  const parseStatus = result?.parseStatus || "clean";
+  const [expandedFindings, setExpandedFindings] = useState(new Set());
+  const [imageExpanded, setImageExpanded] = useState(false);
+  const fileId = file.name + file.size;
+
+  const toggleFinding = (i) => {
+    const newSet = new Set(expandedFindings);
+    if (newSet.has(i)) newSet.delete(i);
+    else newSet.add(i);
+    setExpandedFindings(newSet);
+  };
+
+  const toggleAllFindings = () => {
+    if (expandedFindings.size === findings.length) {
+      setExpandedFindings(new Set());
+    } else {
+      setExpandedFindings(new Set(findings.map((_, i) => i)));
+    }
+  };
+
+  // Auto-collapse when analysis finishes
+  const prevLoading = useRef(isLoading);
+  useEffect(() => {
+    if (prevLoading.current && !isLoading && findings.length > 0 && isCardExpanded) {
+      onToggleCardExpansion(fileId);
+    }
+    prevLoading.current = isLoading;
+  }, [isLoading, findings.length, isCardExpanded, fileId, onToggleCardExpansion]);
+
+  const qualityTag = parseStatus === "auto_corrected"
+    ? { text: "AI output auto-corrected", color: "#f39c12", bg: "#2a220f" }
+    : parseStatus === "manual_review"
+      ? { text: "Manual review recommended", color: "#e67e22", bg: "#2a1b12" }
+      : null;
 
   return (
     <div style={{background:"#141414",border:"1px solid #2a2a2a",borderRadius:4,overflow:"hidden",marginBottom:24}}>
-      <div style={{display:"flex",alignItems:"stretch",borderBottom:"1px solid #2a2a2a"}}>
-        <div style={{width:180,minHeight:140,flexShrink:0,position:"relative",overflow:"hidden",background:"#0a0a0a"}}>
+      <div
+        style={{display:"flex",alignItems:"stretch",borderBottom: isCardExpanded ? "1px solid #2a2a2a" : "none", cursor: findings.length > 0 && !isLoading ? "pointer" : "default"}}
+        onClick={() => { if (findings.length > 0 && !isLoading) onToggleCardExpansion(fileId); }}
+      >
+        <div style={{width:imageExpanded ? 248 : 116,minHeight:imageExpanded ? 190 : 90,flexShrink:0,position:"relative",overflow:"hidden",background:"#0a0a0a",transition:"all 0.2s"}}>
           <img src={url} alt={file.name} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",opacity:0.9}} />
+          {!isLoading && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageExpanded(v => !v);
+              }}
+              style={{position:"absolute",top:6,right:6,background:"rgba(10,10,10,0.8)",border:"1px solid #3a3a3a",color:"#bbb",fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:1,padding:"3px 6px",borderRadius:2,cursor:"pointer"}}
+            >
+              {imageExpanded ? "SMALL" : "LARGE"}
+            </button>
+          )}
           {isLoading && (
             <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8}}>
               <div style={{width:28,height:28,border:"2px solid #c8a96e",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}} />
@@ -190,6 +311,11 @@ function FileCard({ file, result, isLoading }) {
           <div>
             <div style={{fontFamily:"'DM Mono',monospace",color:"#888",fontSize:10,letterSpacing:2,marginBottom:6}}>FILE</div>
             <div style={{color:"#e8e0d0",fontFamily:"'DM Mono',monospace",fontSize:13,marginBottom:12,wordBreak:"break-all"}}>{file.name}</div>
+            {qualityTag && !isLoading && (
+              <div style={{display:"inline-block",background:qualityTag.bg,color:qualityTag.color,border:`1px solid ${qualityTag.color}44`,fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:1,padding:"3px 8px",borderRadius:2,marginBottom:6}}>
+                {qualityTag.text}
+              </div>
+            )}
           </div>
           {!isLoading && findings.length>0 && (
             <div style={{display:"flex",gap:20}}>
@@ -203,26 +329,48 @@ function FileCard({ file, result, isLoading }) {
           )}
           {result?.error && <div style={{color:"#e74c3c",fontFamily:"'DM Mono',monospace",fontSize:12}}>⚠ {result.error}</div>}
         </div>
+        {findings.length > 0 && !isLoading && (
+          <div style={{alignSelf:"center",paddingRight:16,color:"#444",fontSize:16,userSelect:"none",flexShrink:0}}>
+            {isCardExpanded ? "▲" : "▼"}
+          </div>
+        )}
       </div>
-      {findings.length>0 && (
+      {isCardExpanded && findings.length>0 && (
         <div style={{padding:"0 0 8px 0"}}>
+          <div style={{padding:"8px 12px 4px 12px",display:"flex",justifyContent:"flex-end",gap:8}}>
+            <button
+              onClick={toggleAllFindings}
+              style={{background:"#1a1a1a",border:"1px solid #3a3a3a",color:"#999",fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:1,padding:"4px 8px",borderRadius:2,cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={(e) => {e.target.style.borderColor = "#555"; e.target.style.color = "#bbb";}}
+              onMouseLeave={(e) => {e.target.style.borderColor = "#3a3a3a"; e.target.style.color = "#999";}}
+            >
+              {expandedFindings.size === findings.length ? "COLLAPSE ALL" : "EXPAND ALL"}
+            </button>
+          </div>
           {findings.map((f,i)=>{
             const c=classColors[f.classification]||classColors["Needs Review"];
+            const isFindingExpanded = expandedFindings.has(i);
             return (
-              <div key={i} style={{margin:"8px 12px",background:c.bg,border:`1px solid ${c.border}22`,borderLeft:`3px solid ${c.border}`,borderRadius:3,padding:"10px 14px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <div key={i} style={{margin:"8px 12px",background:c.bg,border:`1px solid ${c.border}22`,borderLeft:`3px solid ${c.border}`,borderRadius:3,overflow:"hidden"}}>
+                <div
+                  style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",cursor:"pointer",userSelect:"none"}}
+                  onClick={() => toggleFinding(i)}
+                >
                   <span style={{color:"#e8e0d0",fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:600}}>{f.item}</span>
                   {f.accelerated&&<span style={{background:"#1a3a1a",color:"#2ecc71",fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:1,padding:"2px 6px",borderRadius:2}}>✓ ACCELERATED</span>}
                   <span style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5}}>
+                    <span style={{background:c.badge,color:c.text,fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:1,padding:"1px 6px",borderRadius:1,border:`1px solid ${c.border}44`}}>{f.classification}</span>
                     <div style={{width:7,height:7,borderRadius:"50%",background:confDot[f.confidence]||"#888"}} />
-                    <span style={{color:"#666",fontFamily:"'DM Mono',monospace",fontSize:10}}>{f.confidence}</span>
+                    <span style={{color:"#666",fontFamily:"'DM Mono',monospace",fontSize:10,minWidth:"50px",textAlign:"right"}}>{f.confidence}</span>
+                    <span style={{color:"#444",fontSize:12,marginLeft:4}}>{isFindingExpanded ? "▲" : "▼"}</span>
                   </span>
                 </div>
-                <div style={{color:"#aaa",fontFamily:"'DM Mono',monospace",fontSize:11,marginBottom:6}}>{f.description}</div>
-                <div style={{marginBottom:6}}>
-                  <span style={{background:c.badge,color:c.text,fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:1,padding:"2px 8px",borderRadius:2,border:`1px solid ${c.border}44`}}>{f.classification}</span>
-                </div>
-                <div style={{color:"#666",fontFamily:"'DM Mono',monospace",fontSize:10,lineHeight:1.5}}>{f.rationale}</div>
+                {isFindingExpanded && (
+                  <div style={{padding:"0 14px 10px 14px",borderTop:`1px solid ${c.border}33`,marginTop:"8px",color:"#aaa",fontFamily:"'DM Mono',monospace",fontSize:10,lineHeight:1.6}}>
+                    <div style={{marginBottom:6}}><strong>Description:</strong> {f.description}</div>
+                    <div><strong>Rationale:</strong> {f.rationale}</div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -238,7 +386,24 @@ export default function CostSegAnalyzer() {
   const [loading, setLoading] = useState({});
   const [dragging,setDragging]= useState(false);
   const [pdfReady,setPdfReady]= useState(false);
+  const [queueStatus, setQueueStatus] = useState({ queued: 0, inProgress: 0, total: 0 });
+  const [expandedCards, setExpandedCards] = useState(new Set());
   const inputRef = useRef();
+
+  const toggleCardExpansion = (fileId) => {
+    const newSet = new Set(expandedCards);
+    if (newSet.has(fileId)) newSet.delete(fileId);
+    else newSet.add(fileId);
+    setExpandedCards(newSet);
+  };
+
+  const toggleAllCards = () => {
+    if (expandedCards.size === files.length) {
+      setExpandedCards(new Set());
+    } else {
+      setExpandedCards(new Set(files.map((f) => f.name + f.size)));
+    }
+  };
 
   useEffect(()=>{
     if(window.jspdf){setPdfReady(true);return;}
@@ -253,28 +418,41 @@ export default function CostSegAnalyzer() {
   const analyzeFile = useCallback(async(file)=>{
     const id=file.name+file.size;
     setLoading(l=>({...l,[id]:true}));
+    
     try {
-      const b64=await toBase64(file);
-      const res=await fetch("/api/analyze",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({image_data:b64,media_type:file.type||"image/jpeg",system_prompt:SYSTEM_PROMPT})
-      });
-      const raw=await res.text();
-      let data={};
-      try { data = raw ? JSON.parse(raw) : {}; } catch {}
-      if (!res.ok) {
-        throw new Error(data.error || raw || 'Analysis failed');
-      }
-      const findings = Array.isArray(data.findings) ? data.findings : [];
-      if (!findings.length) {
-        throw new Error('No findings returned from analysis.');
-      }
-      setResults(r=>({...r,[id]:{findings}}));
+      const { findings, parseStatus } = await analysisQueue.add(async () => {
+        const b64=await toBase64(file);
+        const res=await fetch("/api/analyze",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({image_data:b64,media_type:file.type||"image/jpeg",system_prompt:SYSTEM_PROMPT})
+        });
+        const raw=await res.text();
+        let data={};
+        try { data = raw ? JSON.parse(raw) : {}; } catch {}
+        
+        // Create error with status code for retry logic
+        if (!res.ok) {
+          const err = new Error(data.error || raw || 'Analysis failed');
+          err.statusCode = res.status;
+          err.retryAfterMs = data.retryAfterMs || 0;
+          throw err;
+        }
+        
+        const findings = Array.isArray(data.findings) ? data.findings : [];
+        if (!findings.length) {
+          throw new Error('No findings returned from analysis.');
+        }
+        
+        return { findings, parseStatus: data.parseStatus || "clean" };
+      }, id);
+
+      setResults(r=>({...r,[id]:{findings,parseStatus}}));
     } catch (err) {
       console.error("Analysis error:", err);
       setResults(r=>({...r,[id]:{error:`Analysis failed: ${err.message}`,findings:[]}}));
     } finally {
       setLoading(l=>({...l,[id]:false}));
+      setQueueStatus(analysisQueue.getStatus());
     }
   },[]);
 
@@ -319,6 +497,19 @@ export default function CostSegAnalyzer() {
           <div style={{fontSize:28,color:"#e8e0d0",fontWeight:500,letterSpacing:-0.5}}>PhotoSeg</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+          {queueStatus.total > 0 && (
+            <div style={{background:"#161408",border:"1px solid #c8a96e55",padding:"8px 12px",borderRadius:3}}>
+              <div style={{color:"#c8a96e",fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:2}}>QUEUE</div>
+              <div style={{color:"#c8a96e",fontFamily:"'DM Mono',monospace",fontSize:14,fontWeight:600,marginTop:2}}>
+                {queueStatus.inProgress}/{queueStatus.total}
+              </div>
+              {queueStatus.queued > 0 && (
+                <div style={{color:"#888",fontFamily:"'DM Mono',monospace",fontSize:9,marginTop:2}}>
+                  {queueStatus.queued} waiting
+                </div>
+              )}
+            </div>
+          )}
           {allF.length>0&&(
             <div style={{display:"flex",gap:24}}>
               {[["ACCELERATED","#2ecc71",totalAcc],["PHOTOS","#c8a96e",files.length]].map(([l,c,v])=>(
@@ -328,6 +519,16 @@ export default function CostSegAnalyzer() {
                 </div>
               ))}
             </div>
+          )}
+          {files.length > 0 && anyResults && (
+            <button
+              onClick={toggleAllCards}
+              style={{background:"#1a1a1a",border:"1px solid #3a3a3a",color:"#999",fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:1,padding:"8px 12px",borderRadius:3,cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={(e) => {e.target.style.borderColor = "#555"; e.target.style.color = "#bbb";}}
+              onMouseLeave={(e) => {e.target.style.borderColor = "#3a3a3a"; e.target.style.color = "#999";}}
+            >
+              {expandedCards.size === files.length ? "COLLAPSE ALL" : "EXPAND ALL"}
+            </button>
           )}
           <div style={{display:"flex",gap:8}}>
             <button disabled={!anyResults||anyLoading} onClick={()=>exportCSV(files,results)} style={btn(!anyResults||anyLoading)}>↓ CSV</button>
@@ -363,7 +564,7 @@ export default function CostSegAnalyzer() {
 
         {files.map(file=>{
           const id=file.name+file.size;
-          return <FileCard key={id} file={file} result={results[id]} isLoading={!!loading[id]} />;
+          return <FileCard key={id} file={file} result={results[id]} isLoading={!!loading[id]} isCardExpanded={expandedCards.has(id)} onToggleCardExpansion={toggleCardExpansion} />;
         })}
 
         {files.length===0&&(
