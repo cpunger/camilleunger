@@ -472,6 +472,37 @@ export default function CostSegAnalyzer() {
   const totalAcc=allF.filter(f=>f.accelerated).length;
   const anyResults=files.some(f=>(results[f.name+f.size]?.findings||[]).length>0);
   const anyLoading=Object.values(loading).some(Boolean);
+  const classOrder = [
+    "5-Year Personal Property",
+    "7-Year Personal Property",
+    "15-Year Land Improvement",
+    "39-Year Structural",
+    "Needs Review",
+  ];
+  const byClass = classOrder.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+  allF.forEach((f) => {
+    const key = byClass[f.classification] !== undefined ? f.classification : "Needs Review";
+    byClass[key] += 1;
+  });
+  const photosWithAccelerated = files.filter((file) => {
+    const id = file.name + file.size;
+    const findings = results[id]?.findings || [];
+    return findings.some((f) => f.accelerated);
+  }).length;
+  const lowerText = allF.map((f) => `${f.item || ""} ${f.description || ""}`.toLowerCase());
+  const flooringMentions = lowerText.filter((t) => /floor|tile|epoxy|carpet|vinyl|wood/.test(t)).length;
+  const fixtureMentions = lowerText.filter((t) => /fixture|lighting|light|cabinet|millwork|counter|signage/.test(t)).length;
+  const primaryOpportunity = flooringMentions >= fixtureMentions ? "Flooring" : "Fixtures";
+  const structuralMajority = allF.length > 0 && byClass["39-Year Structural"] >= Math.ceil(allF.length * 0.5);
+  const needsReviewCount = byClass["Needs Review"];
+  const keyFindings = [
+    `Accelerated items detected in ${photosWithAccelerated}/${files.length || 0} photos`,
+    `${primaryOpportunity} appears as the primary acceleration opportunity`,
+    structuralMajority
+      ? "Majority of findings remain 39-year structural classification"
+      : "Accelerated classifications represent a significant share of findings",
+    `${needsReviewCount} item${needsReviewCount === 1 ? "" : "s"} require further review`,
+  ];
 
   const btn=(disabled,color="#c8a96e")=>({
     background:disabled?"#161616":"#1c1810",
@@ -492,9 +523,19 @@ export default function CostSegAnalyzer() {
 
       {/* Header */}
       <div style={{borderBottom:"1px solid #1c1c1c",padding:"28px 40px 24px",display:"flex",alignItems:"flex-end",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
-        <div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
           <div style={{color:"#c8a96e",fontSize:10,letterSpacing:4,marginBottom:8}}>COST SEGREGATION ANALYSIS SYSTEM</div>
           <div style={{fontSize:28,color:"#e8e0d0",fontWeight:500,letterSpacing:-0.5}}>PhotoSeg</div>
+          {allF.length>0&&(
+            <div style={{display:"flex",gap:24}}>
+              {[["ACCELERATED","#2ecc71",totalAcc],["PHOTOS","#c8a96e",files.length]].map(([l,c,v])=>(
+                <div key={l} style={{textAlign:"left"}}>
+                  <div style={{color:c,fontSize:20,fontWeight:500}}>{v}</div>
+                  <div style={{color:"#555",fontSize:9,letterSpacing:2}}>{l}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
           {queueStatus.total > 0 && (
@@ -510,16 +551,6 @@ export default function CostSegAnalyzer() {
               )}
             </div>
           )}
-          {allF.length>0&&(
-            <div style={{display:"flex",gap:24}}>
-              {[["ACCELERATED","#2ecc71",totalAcc],["PHOTOS","#c8a96e",files.length]].map(([l,c,v])=>(
-                <div key={l} style={{textAlign:"right"}}>
-                  <div style={{color:c,fontSize:20,fontWeight:500}}>{v}</div>
-                  <div style={{color:"#555",fontSize:9,letterSpacing:2}}>{l}</div>
-                </div>
-              ))}
-            </div>
-          )}
           {files.length > 0 && anyResults && (
             <button
               onClick={toggleAllCards}
@@ -528,6 +559,16 @@ export default function CostSegAnalyzer() {
               onMouseLeave={(e) => {e.target.style.borderColor = "#3a3a3a"; e.target.style.color = "#999";}}
             >
               {expandedCards.size === files.length ? "COLLAPSE ALL" : "EXPAND ALL"}
+            </button>
+          )}
+          {anyResults && (
+            <button
+              onClick={() => inputRef.current?.click()}
+              style={{background:"#1a1a1a",border:"1px solid #3a3a3a",color:"#c8a96e",fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:1,padding:"8px 12px",borderRadius:3,cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={(e) => {e.target.style.borderColor = "#c8a96e55"; e.target.style.color = "#e2c28b";}}
+              onMouseLeave={(e) => {e.target.style.borderColor = "#3a3a3a"; e.target.style.color = "#c8a96e";}}
+            >
+              + ADD MORE PHOTOS
             </button>
           )}
           <div style={{display:"flex",gap:8}}>
@@ -548,19 +589,66 @@ export default function CostSegAnalyzer() {
           ))}
         </div>
 
+        {/* Portfolio summary */}
+        {files.length > 0 && (
+          <div style={{border:"1px solid #252525",borderRadius:4,background:"#101010",marginBottom:20,overflow:"hidden"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #1f1f1f",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+              <div>
+                <div style={{color:"#c8a96e",fontSize:10,letterSpacing:2,marginBottom:4}}>PORTFOLIO SUMMARY</div>
+                <div style={{color:"#7a7a7a",fontSize:10}}>Across all uploaded photos</div>
+              </div>
+              <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                {[["Photos", files.length, "#c8a96e"], ["Findings", allF.length, "#e8e0d0"], ["Accelerated", totalAcc, "#2ecc71"]].map(([label, value, color]) => (
+                  <div key={label} style={{textAlign:"right"}}>
+                    <div style={{color, fontSize:16, fontWeight:600}}>{value}</div>
+                    <div style={{color:"#555", fontSize:9, letterSpacing:1}}>{label.toUpperCase()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{padding:"10px 16px",borderBottom:"1px solid #1f1f1f",display:"flex",gap:14,flexWrap:"wrap"}}>
+              {classOrder.map((cls) => {
+                const c = classColors[cls];
+                return (
+                  <div key={cls} style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{width:7,height:7,borderRadius:1,background:c.border}} />
+                    <span style={{color:"#707070",fontSize:10}}>{cls}: <span style={{color:c.text}}>{byClass[cls]}</span></span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{padding:"12px 16px 14px"}}>
+              <div style={{color:"#c8a96e",fontSize:10,letterSpacing:2,marginBottom:8}}>KEY FINDINGS</div>
+              <div style={{display:"grid",gap:6}}>
+                {keyFindings.map((line, idx) => (
+                  <div key={idx} style={{display:"flex",alignItems:"flex-start",gap:8,color:"#b6b6b6",fontSize:11,lineHeight:1.5}}>
+                    <span style={{color:"#5e5e5e"}}>•</span>
+                    <span>{line}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <input ref={inputRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>addFiles(e.target.files)} />
+
         {/* Drop zone */}
-        <div
-          onDragOver={e=>{e.preventDefault();setDragging(true);}}
-          onDragLeave={()=>setDragging(false)}
-          onDrop={onDrop}
-          onClick={()=>inputRef.current?.click()}
-          style={{border:`1px dashed ${dragging?"#c8a96e":"#272727"}`,borderRadius:4,padding:"36px 24px",textAlign:"center",cursor:"pointer",background:dragging?"#191408":"#0e0e0e",transition:"all 0.15s",marginBottom:32}}
-        >
-          <input ref={inputRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>addFiles(e.target.files)} />
-          <div style={{color:dragging?"#c8a96e":"#3a3a3a",fontSize:28,marginBottom:10}}>⊕</div>
-          <div style={{color:dragging?"#c8a96e":"#4a4a4a",fontSize:12,letterSpacing:2}}>{dragging?"DROP TO ANALYZE":"DRAG PHOTOS HERE  ·  OR CLICK TO BROWSE"}</div>
-          <div style={{color:"#2a2a2a",fontSize:10,letterSpacing:1,marginTop:8}}>JPG · PNG · WEBP · HEIC</div>
-        </div>
+        {!anyResults && (
+          <div
+            onDragOver={e=>{e.preventDefault();setDragging(true);}}
+            onDragLeave={()=>setDragging(false)}
+            onDrop={onDrop}
+            onClick={()=>inputRef.current?.click()}
+            style={{border:`1px dashed ${dragging?"#c8a96e":"#272727"}`,borderRadius:4,padding:"22px 20px",textAlign:"center",cursor:"pointer",background:dragging?"#191408":"#0e0e0e",transition:"all 0.15s",marginBottom:24}}
+          >
+            <div style={{color:dragging?"#c8a96e":"#3a3a3a",fontSize:28,marginBottom:10}}>⊕</div>
+            <div style={{color:dragging?"#c8a96e":"#4a4a4a",fontSize:12,letterSpacing:2}}>{dragging?"DROP TO ANALYZE":"DRAG PHOTOS HERE  ·  OR CLICK TO BROWSE"}</div>
+            <div style={{color:"#2a2a2a",fontSize:10,letterSpacing:1,marginTop:8}}>JPG · PNG · WEBP · HEIC</div>
+          </div>
+        )}
 
         {files.map(file=>{
           const id=file.name+file.size;
